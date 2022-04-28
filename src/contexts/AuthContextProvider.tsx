@@ -9,7 +9,7 @@ type AuthContextProviderProps = {
 // estou enviando o [userAth] e a função signInWithGoogle()
 // Quando se usa função assincrona, devemos sempre retornar ela como Promise
 // e o tipo dela, sempre () => void.
-type AuthTypes = {
+type ContextTypes = {
   userAuth: UserAuthTypes | undefined;
   signInWithGoogle: () => Promise<void>;
 };
@@ -20,7 +20,7 @@ type UserAuthTypes = {
   avatar: string;
 };
 
-export const Context = createContext({} as AuthTypes);
+export const Context = createContext({} as ContextTypes);
 
 const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   // Estado que estou armazenando o array com informações do usuario google
@@ -32,6 +32,7 @@ const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   useEffect(() => {
     // Essa const verificado se eu estou autenticado naquela sessão e
     // reinsere os valores em "Cache" e não precisar relogar
+    
     const unsubscribe = auth.onAuthStateChanged((userOn) => {
       // Se retornar um valor eu desestruturo  para validar se cada item
       // é diferente de True
