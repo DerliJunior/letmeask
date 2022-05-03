@@ -1,10 +1,11 @@
 import React, { FormEvent, useCallback, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/auth.scss";
 
 import ilustracao from "../../assets/images/illustration.svg";
 import logo from "../../assets/images/logo.svg";
 import googleIcon from "../../assets/images/google-icon.svg";
+
+import "../../styles/auth.scss";
 
 import Button from "../../Components/Button";
 import { Context } from "../../contexts/AuthContextProvider";
@@ -50,8 +51,6 @@ const Home = () => {
     const firebaseRoom = await database.ref('rooms');
 
     firebaseRoom.key?.substring(1,5)
-
-
 
     navigate(`/rooms/${roomCode}`);
   };
