@@ -28,7 +28,7 @@ const Home = () => {
   const HandleEnterRoomCode = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setRoomCode(event.target.value);
-      console.log(event.target.value)
+      console.log(event.target.value);
     },
     []
   );
@@ -41,18 +41,22 @@ const Home = () => {
     }
 
     const roomRef = await database.ref(`rooms/${roomCode}`).get();
-    console.log(roomRef);
     if (!roomRef.exists()) {
       alert("Sala não existe.");
-
       return;
     }
 
-    const firebaseRoom = await database.ref('rooms');
+    if (roomRef.val().endedAt) {
+      window.alert("Código da sala foi encerrada.");
+      setRoomCode("");
+      return;
+    }
 
-    firebaseRoom.key?.substring(1,5)
-
-    navigate(`/rooms/${roomCode}`);
+    if (roomRef.val().authorId === userAuth?.id) {
+      navigate(`/admin/rooms/${roomCode}`);
+    } else {
+      navigate(`/rooms/${roomCode}`);
+    }
   };
 
   return (

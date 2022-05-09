@@ -76,6 +76,7 @@ const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
       });
     }
   };
+  
   return (
     // Para que todos os componentes filhos receba informações do context
     // preciso passar um children como value e tudo dentro do Context

@@ -31,7 +31,11 @@ type QuestionType = {
   isAnswered: boolean;
   isHighlighted: boolean;
   likeCount: number;
-  hasLiked: boolean;
+  likeId: string | undefined;
+
+
+  //hasLiked era uma condição para verificar se já havia sido 
+  // hasLiked: boolean;
 };
 
 export const useRoom = (roomId: string) => {
@@ -59,7 +63,16 @@ export const useRoom = (roomId: string) => {
             isHighlighted: value.isHighlighted,
             isAnswered: value.isAnswered,
             likeCount: Object.values(value.likes ?? {}).length,
-            hasLiked: Object.values(value.likes ?? {}).some((like) => like.authorId === userAuth?.id),
+            likeId: Object.entries(value.likes ?? {}).find(
+              ([key, like]) => like.authorId === userAuth?.id
+            )?.[0],
+
+
+
+            // essa funcao .some() estava retornando um boolean
+            // hasLiked: Object.values(value.likes ?? {}).some(
+            //   (like) => like.authorId === userAuth?.id
+            // ),
           };
         }
       );
@@ -67,6 +80,10 @@ export const useRoom = (roomId: string) => {
       setQuestion(parsedQuestion);
       setTitle(firebaseTitle);
     });
+
+    return () => {
+      roomRef.off("value");
+    };
   }, [roomId, userAuth]);
 
   return { question, title };

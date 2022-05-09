@@ -36,7 +36,7 @@ const NewRoom = () => {
       authorId: userAuth?.id,
     });
 
-    navigate(`/rooms/${firebaseRoom.key}`)
+    navigate(`/admin/rooms/${firebaseRoom.key}`)
     
   };
 
@@ -58,7 +58,7 @@ const NewRoom = () => {
           <form onSubmit={createRoom}>
             <input
               type="text"
-              placeholder="Digite o código da sala"
+              placeholder="Escolha nome para a sala."
               onChange={HandleChangeForm}
               value={room}
             />

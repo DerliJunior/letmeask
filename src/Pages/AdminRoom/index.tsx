@@ -1,14 +1,20 @@
-import React, { FormEvent, useState, useContext } from "react";
+import React, { useState } from "react";
 
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import logo from "../../assets/images/logo.svg";
+import empty from "../../assets/images/delete.svg";
+
+import Dialog from "@mui/material/Dialog";
+
 import Button from "../../Components/Button";
-import Question from "../../Components/Question";
 import RoomCode from "../../Components/RoomCode";
-import { Context } from "../../contexts/AuthContextProvider";
+import Question from "../../Components/Question";
+
 import { useRoom } from "../../hooks/useRoom";
 import { database } from "../../services/firebase";
+
+import ExcluirQuestao from "./ExcluirQuestao";
 
 import "../../styles/room.scss";
 
@@ -17,94 +23,71 @@ type RoomParams = {
 };
 
 const AdminRoom = () => {
+  const [open, setOpen] = useState<boolean>(false);
+  const [questionId, setQuestionId] = useState<string>("");
+
+  const navigate = useNavigate();
+
   const params = useParams<RoomParams>();
   const roomId = String(params.id);
-
-  const [newQuestion, setNewQuestion] = useState("");
-
-  const { userAuth } = useContext(Context);
-
   const { title, question } = useRoom(roomId);
 
-  const HandleWriteText = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNewQuestion(event.target.value);
+  const handleEndRoom = async () => {
+    await database.ref(`rooms/${roomId}`).update({
+      endedAt: new Date(),
+    });
+    navigate("/");
   };
 
-  const handleSendQuestion = async (event: FormEvent) => {
-    event.preventDefault();
-
-    if (newQuestion.trim() === "") {
-      return;
-    }
-
-    if (!userAuth) {
-      throw new Error();
-    }
-
-    const question = {
-      content: newQuestion,
-      author: {
-        name: userAuth.name,
-        avatar: userAuth.avatar,
-      },
-      isHighlighted: false,
-      isAnswered: false,
-    };
-
-    await database.ref(`rooms/${roomId}/questions`).push(question);
-
-    setNewQuestion("");
+  const handleRemoveQuestion = async (idQuestion: string) => {
+    await setOpen(true);
+    await setQuestionId(idQuestion);
+  };
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
-    <div id="page-room">
-      <header>
-        <div className="content">
-          <img src={logo} alt="Logo header" />
-          <div>
-            <RoomCode id={roomId} />
-            <Button>Encerrar sala</Button>
+    <>
+      <div id="page-room">
+        <header>
+          <div className="content">
+            <img src={logo} alt="Logo header" />
+            <div>
+              <RoomCode id={roomId} />
+              <Button onClick={handleEndRoom}>Encerrar sala</Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main>
-        <div className="room-title">
-          <h2>{title}</h2>
-          <span>
-            {question.length > 0
-              ? `${question.length} pergunta(s)`
-              : ` Nenhuma pergunta`}{" "}
-          </span>
-        </div>
-        <form onSubmit={handleSendQuestion}>
-          <textarea
-            placeholder="O que gostaria de perguntar?"
-            onChange={HandleWriteText}
-            value={newQuestion}
-          />
-          <div className="form-footer">
-            {userAuth ? (
-              <div className="user-info">
-                <img src={userAuth.avatar} alt={userAuth.name} />
-                <span>{userAuth.name}</span>
-              </div>
-            ) : (
-              <span>
-                Para enviar uma pergunta, <button>Faça seu login</button>.
-              </span>
-            )}
-
-            <Button type="submit">Fazer pergunta</Button>
+        <main>
+          <div className="room-title">
+            <h2>{title}</h2>
+            <span>
+              {question.length > 0
+                ? `${question.length} pergunta(s)`
+                : ` Nenhuma pergunta`}
+            </span>
           </div>
-        </form>
-        <div className="question-list">
-          {question.map((questoes) => (
-            <Question content={questoes.content} author={questoes.author} />
-          ))}
-        </div>
-      </main>
-    </div>
+          <div className="question-list">
+            {question.map((questoes) => (
+              <Question content={questoes.content} author={questoes.author}>
+                <button onClick={() => handleRemoveQuestion(questoes.id)}>
+                  <img src={empty} alt="Icone de lixeira" />
+                </button>
+              </Question>
+            ))}
+          </div>
+        </main>
+      </div>
+      <Dialog maxWidth="sm" fullWidth open={open} onClose={handleClose}>
+        <ExcluirQuestao
+          close={handleClose}
+          questionId={questionId}
+          roomId={roomId}
+        />
+      </Dialog>
+    </>
   );
 };
 

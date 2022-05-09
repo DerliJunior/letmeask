@@ -1,6 +1,6 @@
 import React, { FormEvent, useState, useContext } from "react";
 
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import logo from "../../assets/images/logo.svg";
 
@@ -24,9 +24,11 @@ const Room = () => {
 
   const [newQuestion, setNewQuestion] = useState("");
 
-  const { userAuth } = useContext(Context);
+  const { userAuth, signInWithGoogle } = useContext(Context);
 
   const { title, question } = useRoom(roomId);
+
+  const navigate = useNavigate();
 
   const handleWriteText = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewQuestion(event.target.value);
@@ -40,6 +42,7 @@ const Room = () => {
     }
 
     if (!userAuth) {
+      alert("Faça login para enviar pergunta.");
       throw new Error();
     }
 
@@ -58,10 +61,34 @@ const Room = () => {
     setNewQuestion("");
   };
 
-  const handleLikeQuestion = async (questionId: string) => {
-    await database.ref(`rooms/${roomId}/questions/${questionId}/likes`).push({
-      authorId: userAuth?.id,
-    });
+  const handleLikeQuestion = async (
+    questionId: string,
+    likeId: string | undefined
+  ) => {
+    if (likeId) {
+      await database
+        .ref(`rooms/${roomId}/questions/${questionId}/likes/${likeId}`)
+        .remove();
+    } else {
+      await database.ref(`rooms/${roomId}/questions/${questionId}/likes`).push({
+        authorId: userAuth?.id,
+      });
+    }
+  };
+
+  const handleSignInWithGoogle = async () => {
+    const roomRef = await database.ref(`rooms/${roomId}`).get();
+
+    if (!userAuth) {
+      await signInWithGoogle();
+      throw new Error();
+    }
+
+    if(roomRef.val().authorId === userAuth?.id){
+      navigate(`/admin/rooms/${roomId}`);
+    }else {
+      navigate(`/rooms/${roomId}`);
+    }
   };
 
   return (
@@ -95,7 +122,9 @@ const Room = () => {
               </div>
             ) : (
               <span>
-                Para enviar uma pergunta, <button>Faça seu login</button>.
+                Para enviar uma pergunta,{" "}
+                <button onClick={handleSignInWithGoogle}>Faça seu login</button>
+                .
               </span>
             )}
 
@@ -112,9 +141,11 @@ const Room = () => {
               <button
                 className="like-button"
                 type="button"
-                onClick={() => handleLikeQuestion(questoes.id)}
+                onClick={() =>
+                  handleLikeQuestion(questoes.id, questoes?.likeId)
+                }
               >
-                {questoes.likeCount> 0 && <span>{questoes.likeCount}</span>}
+                {questoes.likeCount > 0 && <span>{questoes.likeCount}</span>}
                 <svg
                   width="24"
                   height="24"
